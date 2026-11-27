@@ -5,6 +5,17 @@ from pathlib import Path
 import re
 from thermal_engine import extract_word, inspect_batch, make_excel
 st.set_page_config(page_title='열화상 보고서 자동화',page_icon='🌡️',layout='centered')
+# Hide Streamlit's top-right toolbar (visual only).
+st.markdown("""
+<style>
+[data-testid="stToolbar"],
+[data-testid="stToolbarActions"],
+[data-testid="stMainMenu"],
+#MainMenu {
+    display: none !important;
+}
+</style>
+""", unsafe_allow_html=True)
 st.title('🌡️ 열화상 보고서 자동화 V1.1.1')
 st.caption('Word 원본 → 엑셀 자동 입력 → 다운로드')
 st.info('본 시스템은 열화상 보고서 작성 시간을 단축하기 위한 업무 자동화 프로그램입니다. 파일은 외부 클라우드 서버에서 처리되며 별도의 영구 저장 기능은 없습니다. 회사의 정보보안 규정을 준수하고, 승인 전에는 기밀이 없는 샘플만 사용해 주세요.')
