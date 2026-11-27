@@ -5,9 +5,9 @@ from pathlib import Path
 import re
 from thermal_engine import extract_word, inspect_excel, make_excel
 st.set_page_config(page_title='열화상 보고서 자동화',page_icon='🌡️',layout='centered')
-st.title('🌡️ 열화상 보고서 자동화 V1.0')
+st.title('🌡️ 열화상 보고서 자동화 V1.1')
 st.caption('Word 원본 → 엑셀 자동 입력 → 다운로드')
-st.warning('공개 테스트용입니다. 회사 승인 전에는 기밀이 없는 샘플만 사용하세요. 파일은 서버 메모리에서 처리되며 영구 저장 기능은 없습니다.')
+st.info('본 시스템은 열화상 보고서 작성 시간을 단축하기 위한 업무 자동화 프로그램입니다. 파일은 외부 클라우드 서버에서 처리되며 별도의 영구 저장 기능은 없습니다. 회사의 정보보안 규정을 준수하고, 승인 전에는 기밀이 없는 샘플만 사용해 주세요.')
 word=st.file_uploader('① Word 원본',type=['doc','docx'])
 books=st.file_uploader('② 엑셀 보고서',type=['xlsx'],accept_multiple_files=True)
 allow=st.checkbox('중복 사진 번호가 있더라도 지정된 번호 그대로 적용')
@@ -42,3 +42,19 @@ if st.session_state.get('results'):
     st.download_button('전체 ZIP 다운로드',buf.getvalue(),'thermal_reports.zip',mime='application/zip')
 if st.button('결과 지우기'):
     st.session_state.pop('results',None); st.rerun()
+
+# V1.1 기능 안내
+st.divider()
+st.markdown('**📋 V1.1 주요 기능**')
+for feature in [
+    '실물사진 바로 위 숫자로 사진 자동 매칭',
+    '실물 사진 및 열화상 사진 자동 삽입 (229.3 × 173.3px)',
+    'Max. temperature의 SP1·SP2·SP3 자동 입력 (SP3 누락 시 -)',
+    '기존 병합 셀, 행 높이, 열 너비 및 인쇄 설정 보존',
+    '사진 번호 중복 및 매칭 누락 검사',
+    '실제 적용 사진 번호 좌우 비교표 제공',
+    '검사 위치 수, 삽입 사진 수, 매칭 누락 수 안내',
+    '엑셀 다중 작업 및 ZIP 일괄 다운로드',
+]:
+    st.caption('✓ ' + feature)
+st.caption('Thermal Report Automation · Version 1.1')
