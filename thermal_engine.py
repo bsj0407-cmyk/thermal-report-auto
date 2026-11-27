@@ -123,8 +123,46 @@ def make_excel(data,entries,allow_duplicates=False):
     result=out.getvalue(); check=load_workbook(BytesIO(result)); ws=check.active
     try:
         if len(ws._images)!=2*len(slots): raise ValueError('사진 수 검증 실패')
+        expected={}
+        for r,c,n in slots:
+            for top,idx in ((r,1),(r+9,0)):
+                b=BytesIO()
+                with Image.open(BytesIO(entries[n][idx])) as im: im.convert('RGB').save(b,format='JPEG',quality=94)
+                expected[(top-1,c-1)]=b.getvalue()
+        for image in ws._images:
+            anchor=image.anchor._from
+            key=(anchor.row,anchor.col)
+            if key not in expected or image._data()!=expected.pop(key): raise ValueError(f'사진 위치 또는 내용 검증 실패: {key}')
+        if expected: raise ValueError('사진 삽입 누락')
         for r,c,n in slots:
             for j,k in enumerate(('sp1','sp2','sp3')):
                 if ws.cell(r+19+j,c+7).value!=entries[n][2].get(k,'-'): raise ValueError('온도 검증 실패')
     finally: check.close()
     return result,slots
+
+
+def inspect_batch(books, entries, date):
+    """Validate all uploaded workbooks before generating any output."""
+    from collections import defaultdict
+    from openpyxl.utils import get_column_letter
+    locations=defaultdict(list)
+    errors=[]; prepared=[]
+    for i,(name,data) in enumerate(books,1):
+        label=f'[{i}] {name}'
+        try:
+            m=re.search(r'(\d{4})(?:\(\d+\))?\.xlsx$',name)
+            if m and m[1]!=date[-4:]: raise ValueError('엑셀 파일명과 Word 촬영일 불일치')
+            slots,missing,dup=inspect_excel(data,entries)
+            prepared.append((name,data,slots))
+            for r,c,n in slots:
+                addr=f'{get_column_letter(c)}{r}'
+                locations[n].append((i,label,addr))
+                if n in missing: errors.append(f'Word에 없는 사진 번호 {n}: {label} / {addr}')
+        except Exception as e:
+            errors.append(f'{label}: {e}')
+    for n,places in sorted(locations.items()):
+        counts=Counter(i for i,_,_ in places)
+        detail=' / '.join(f'{label} ({addr})' for _,label,addr in places)
+        if any(k>1 for k in counts.values()): errors.append(f'파일 내부 중복 번호 {n}: {detail}')
+        if len(counts)>1: errors.append(f'파일 간 중복 번호 {n}: {detail}')
+    return prepared,errors
