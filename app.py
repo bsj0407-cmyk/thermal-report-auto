@@ -8,8 +8,9 @@ st.set_page_config(page_title='열화상 보고서 자동화',page_icon='🌡️
 st.title('🌡️ 열화상 보고서 자동화 V1.1.1')
 st.caption('Word 원본 → 엑셀 자동 입력 → 다운로드')
 st.info('본 시스템은 열화상 보고서 작성 시간을 단축하기 위한 업무 자동화 프로그램입니다. 파일은 외부 클라우드 서버에서 처리되며 별도의 영구 저장 기능은 없습니다. 회사의 정보보안 규정을 준수하고, 승인 전에는 기밀이 없는 샘플만 사용해 주세요.')
-word=st.file_uploader('① Word 원본',type=['doc','docx'])
-books=st.file_uploader('② 엑셀 보고서',type=['xlsx'],accept_multiple_files=True)
+generation=st.session_state.setdefault('upload_generation',0)
+word=st.file_uploader('① Word 원본',type=['doc','docx'],key=f'word_{generation}')
+books=st.file_uploader('② 엑셀 보고서',type=['xlsx'],accept_multiple_files=True,key=f'books_{generation}')
 st.caption('현재 업로드된 전체 엑셀의 사진 번호 중복 및 누락을 검사합니다.')
 st.caption('사진 229.3 × 173.3px · Max. temperature · SP3 누락 시 - · 원본 양식 보존')
 # Clear old downloads whenever the uploaded files change.
@@ -51,8 +52,11 @@ if st.session_state.get('results'):
     with ZipFile(buf,'w',ZIP_DEFLATED) as z:
         for i,(name,data,*_) in enumerate(st.session_state['results']): z.writestr(f'{i+1:02d}_{name}',data)
     st.download_button('전체 ZIP 다운로드',buf.getvalue(),'thermal_reports.zip',mime='application/zip')
-if st.button('결과 지우기'):
-    st.session_state.pop('results',None); st.rerun()
+if st.button('초기화'):
+    st.session_state.pop('results',None)
+    st.session_state.pop('input_signature',None)
+    st.session_state['upload_generation']=generation+1
+    st.rerun()
 
 # V1.1.1 기능 안내
 st.divider()
@@ -66,6 +70,7 @@ for feature in [
     '실제 적용 사진 번호 좌우 비교표 제공',
     '검사 위치 수, 삽입 사진 수, 매칭 누락 수 안내',
     '엑셀 다중 작업 및 ZIP 일괄 다운로드',
+    '초기화 버튼으로 업로드 파일 및 작업 결과 지우기',
 ]:
     st.caption('✓ ' + feature)
 st.caption('Thermal Report Automation · Version 1.1.1')
